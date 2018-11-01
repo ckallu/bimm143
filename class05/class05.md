@@ -1,8 +1,9 @@
-#' ---
-#' title: "Class 5"
-#' output: github_document
-#' ---
+Class 5
+================
+chinm
+Thu Nov 01 11:52:31 2018
 
+``` r
 # 2A Line Plots
 
 # Baby weight input data
@@ -22,8 +23,11 @@ plot(
   xlab = "Age (Months)",
   ylab = "Weight (kg)"
 )
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-1.png)
 
+``` r
 #2B Bar Plots
 
 # Molecular elements input data
@@ -50,19 +54,29 @@ barplot(
   las = 1,
   xlim = c(0, 80000)
 )
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-2.png)
 
+``` r
 #2C Histograms
 
 x <- c(rnorm(10000), rnorm(10000) + 4)
 hist(x, breaks = 80)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-3.png)
+
+``` r
 plot(c(1:10) ^ 2,
      typ = "b",
      lwd = 4,
      lty = 1)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-4.png)
 
+``` r
 # 3A Providing color vectors
 
 # Male and Female Counts input data
@@ -85,6 +99,11 @@ barplot(
   names.arg = mf_counts$Sample,
   las = 2
 )
+```
+
+![](class05_files/figure-markdown_github/unnamed-chunk-1-5.png)
+
+``` r
 barplot(
   mf_counts$Count,
   pch = 4,
@@ -92,8 +111,11 @@ barplot(
   names.arg = mf_counts$Sample,
   las = 2
 )
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-6.png)
 
+``` r
 # 3B Providing color vectors
 
 # Up and Down input data
@@ -107,10 +129,20 @@ View (genes)
 
 # Number of Rows
 nrow(genes)
+```
 
+    ## [1] 5196
+
+``` r
 # Number of genes that are up/down/unchanging
 table (genes$State)
+```
 
+    ## 
+    ##       down unchanging         up 
+    ##         72       4997        127
+
+``` r
 # Scatterplot of genes
 plot (
   genes$Condition1,
@@ -119,7 +151,11 @@ plot (
   xlab = "Expression Condition 1",
   ylab = "Expression Condition 2"
 )
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-7.png)
+
+``` r
 # Adjust color scheme for scatterplot of genes
 palette(c("red", "gray", "green3"))
 plot (
@@ -129,8 +165,11 @@ plot (
   xlab = "Expression Condition 1",
   ylab = "Expression Condition 2"
 )
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-8.png)
 
+``` r
 # 3C Dynamic Coloring
 
 # Expression Methylation input data
@@ -141,28 +180,48 @@ View (meth)
 
 # Number of Rows
 nrow(genes)
+```
 
+    ## [1] 5196
+
+``` r
 # Scatterplot of expression methylation genes
 plot(meth$gene.meth, meth$expression)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-9.png)
+
+``` r
 # Coloring by point density and making a new plot
 dcols <- densCols(meth$gene.meth, meth$expression)
 plot(meth$gene.meth,
      meth$expression,
      col = dcols,
      pch = 20)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-10.png)
+
+``` r
 # Trimming for data that has more than 0 gene expression and making a new plot
 inds <- meth$expression > 0
 plot(meth$gene.meth[inds], meth$expression[inds])
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-11.png)
+
+``` r
 # Coloring by point density for trimmed data and making a new plot
 dcols2 <- densCols(meth$gene.meth[inds], meth$expression[inds])
 plot(meth$gene.meth[inds],
      meth$expression[inds],
      col = dcols2,
      pch = 20)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-12.png)
+
+``` r
 # Custom coloring by point density
 dcols.custom <-
   densCols(meth$gene.meth[inds], meth$expression[inds], colramp = colorRampPalette(c("blue2", "green2", "red2", "yellow")))
@@ -170,3 +229,6 @@ plot(meth$gene.meth[inds],
      meth$expression[inds],
      col = dcols.custom,
      pch = 20)
+```
+
+![](class05_files/figure-markdown_github/unnamed-chunk-1-13.png)
