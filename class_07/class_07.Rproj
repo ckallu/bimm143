@@ -1,0 +1,14 @@
+source("http://tinyurl.com/rescale-R")
+
+rescale2 ( c(1,10,"string"))
+
+# Lets define an example x and y
+x <- c( 1, 2, NA, 3, NA)
+y <- c(NA, 3, NA, 3, 4)
+
+is.na(x) & is.na(y)
+
+sum (is.na(x))
+sum (is.na(y))
+
+sum ((is.na(x) & is.na(y)))
