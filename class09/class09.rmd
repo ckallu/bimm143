@@ -1,0 +1,133 @@
+---
+title: "Class09"
+author: "Chinmay Kalluraya"
+date: "October 30, 2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Unsupervvised Learning Analysis of Cancer Cells
+```{r}
+
+# Input data stored as wisc.df
+url <- "https://bioboot.github.io/bimm143_W18/class-material/WisconsinCancer.csv"
+wisc.df <- read.csv(url)
+
+# Views top 6 lines of the data set
+head (wisc.df)
+
+# Convert the features of the data: wisc.data
+wisc.data <- as.matrix(wisc.df[,3:32])
+row.names(wisc.data) <- wisc.df$id
+
+# Converts diagnosis as 1 for M or 0 for B
+diagnosis <- as.numeric(wisc.df$diagnosis =="M")
+
+# Number of observations in the dataset
+dim(wisc.df)
+
+# How many variables suffixed with _mean
+length(grep("_mean", colnames(wisc.df)))
+
+# How many of the observations have a malignant diagnosis?
+sum(diagnosis)
+
+```
+
+```{r}
+# Check column means and standard deviations
+colMeans(wisc.data)
+
+apply(wisc.data,2,sd)
+
+# Perform PCA on wisc.data 
+wisc.pr <- prcomp(wisc.data, scale. = TRUE)
+
+# Look at summary of results
+summary(wisc.pr)
+
+# What proportion of the original variance is captured by the first principal components (PC1)?
+wisc.pr.var.per <- round((wisc.pr$sdev)^2/sum(wisc.pr$sdev)*100, 1)
+
+# How many principal components (PCs) are required to describe at least 70% of the original variance in the data?
+
+barplot(wisc.pr.var.per, main="Scree Plot",
+ xlab="Principal Component", ylab="Percent Variation")
+
+# How many principal components (PCs) are required to describe at least 90% of the original variance in the data?
+```
+
+```{r}
+# Interpret PCA results as biplot
+biplot(wisc.pr)
+attributes(wisc.pr)
+
+# plot PCA1 vs PCA2 by the diagnosis
+plot(wisc.pr$x[,1], wisc.pr$x[,2], col=diagnosis+1, xlab = "PC1", ylab = "PC2")
+
+# Scatter plot observations by components 1 and 3
+plot(wisc.pr$x[,1], wisc.pr$x[,3], col = diagnosis+1, xlab = "PC1", ylab = "PC2")
+```
+
+```{r}
+# Variance explained by each principal component: pve
+pr.var <- wisc.pr$sdev^2
+pve <- pr.var/(sum(pr.var))
+
+# Plot variance explained for each principal component
+plot(pve, xlab = "Principal Component", 
+     ylab = "Proportion of Variance Explained", 
+     ylim = c(0, 1), type = "o")
+
+# Alternative scree plot of the same data, note data driven y-axis
+barplot(pve, ylab = "Precent of Variance Explained",
+     names.arg=paste0("PC",1:length(pve)), las=2, axes = FALSE)
+axis(2, at=pve, labels=round(pve,2)*100 )
+
+# Plot cumulative proportion of variance explained
+plot(cumsum(pve), xlab = "Principal Component", 
+     ylab = "Cumulative Proportion of Variance Explained", 
+     ylim = c(0, 1), type = "o")
+```
+
+```{r}
+# Scale the wisc.data data: data.scaled
+data.scaled <- scale(wisc.data)
+
+# Euclidean distance 
+data.dist <- dist(data.scaled)
+
+# hierarchical clustering model
+wisc.hclust <- hclust(data.dist, method = "complete")
+
+
+plot(wisc.hclust)
+wisc.hclust.clusters <- cutree(wisc.hclust, k = 4)
+table(wisc.hclust.clusters, diagnosis)
+```
+
+```{r}
+## Use the distance along the first 7 PCs for clustering i.e. wisc.pr$x[, 1:7]
+d.pc <- dist(wisc.pr$x[, c(1:7)])
+wisc.pr.hclust <- hclust(d.pc, method="complete")
+
+wisc.pr.hclust.clusters <- cutree(wisc.pr.hclust, k=4)
+
+# Compare to actual diagnoses
+table(wisc.pr.hclust.clusters, diagnosis)
+table(wisc.hclust.clusters, diagnosis)
+
+```
+
+```{r}
+## Predicting Malignancy Of New samples
+url <- "https://tinyurl.com/new-samples-CSV"
+new <- read.csv(url)
+npc <- predict(wisc.pr, newdata=new)
+plot(wisc.pr$x[,1:2], col=diagnosis+1)
+points(npc[,1], npc[,2], col="blue", pch=16, cex =3)
+```
+
