@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Get HIV-Pr structure from PDB database
 ```{r}
+library("bio3d")
 file.name <- get.pdb("1hsg")
 hiv <- read.pdb(file.name)
 hiv
@@ -29,11 +30,33 @@ lig <- trim.pdb(hiv, "ligand")
 write.pdb(prot, file="1hsg_protein.pdb")
 write.pdb(lig, file="1hsg_ligand.pdb")
 ```
+## Docking with Vina
+
+We run this command:
+`"\Program Files (x86)\The Scripps Research nstitute\Vina\vina.exe" --config config.txt --log log.txt`
 
 ## Inspect Docking Results
 ```{r}
 res <- read.pdb("all.pdbqt", multi=TRUE)
 write.pdb(res, "results.pdb")
+```
+
+##RMSD
+
+```{r}
+ori <- read.pdb("1hsg_ligand.pdbqt")
+rmsd(ori, res)
+```
+
+## Normal Mode Analysis
+
+```{r}
+library(bio3d)
+pdb <- read.pdb("1HEL")
+modes <- nma(pdb)
+plot(modes, sse=pdb)
+# Visualize NMA results
+mktrj(modes, mode=7, file="nma_7.pdb")
 ```
 
 
