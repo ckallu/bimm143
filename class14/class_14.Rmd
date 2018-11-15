@@ -1,0 +1,46 @@
+---
+title: "Class_14"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Asthma SNPs Analysis in the MXL (Mexican Ancestry in Los ANgeles, CA) 1000 Patients Sequencing dad
+
+```{r}
+mxl <- read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378.csv")
+mxl
+```
+
+## Find percent of individuals with A|A SNP variant
+```{r}
+genotypes <- round (table (mxl[,2])/nrow(mxl)* 100, 2)
+genotypes
+```
+
+There are `r genotypes[1]`% of AA genotype individuals
+
+
+## Interpreting Base Qualities in R
+```{r}
+#install.packages("seqinr")
+#install.packages("gtools")
+library(seqinr)
+library(gtools)
+phred <- asc( s2c("DDDDCDEDCDDDDBBDDDCC@") ) - 33
+phred
+```
+
+## Population Gene Expression 
+```{r}
+gene_exp <- read.table("https://bioboot.github.io/bimm143_F18/class-material/rs8067378_ENSG00000172057.6.txt")
+#gene_exp
+summary(gene_exp)
+inds.aa <- gene_exp$geno == "A/A"
+inds.ag <- gene_exp$geno == "A/G"
+inds.gg <- gene_exp$geno == "G/G"
+tab_gene_exp <- boxplot(exp ~ gene_exp$geno, data = gene_exp)
+```
+
