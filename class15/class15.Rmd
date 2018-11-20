@@ -1,0 +1,236 @@
+---
+title: "class15"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## RNA Seq Analysis
+
+#Install DESeq2 Bioconductor Package
+```{r}
+#source("http://bioconductor.org/biocLite.R")
+#biocLite()
+# For this class, you'll also need DESeq2:
+#biocLite("DESeq2")
+
+library(BiocInstaller)
+```
+
+#Read countData and colData (metadata) files that we will use with DESeq
+```{r}
+counts <- read.csv("data/airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("data/airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+
+#Examine metadata file to find control and treated columns (cell lines)
+```{r}
+control.inds <- metadata$dex == "control"
+control <- metadata[control.inds,]
+#control
+```
+
+```{r}
+control.mean <- rowSums(counts[,control$id])/nrow(control)
+names(control.mean) <- counts$ensgene
+#control.mean
+```
+
+#Do the same for the treated column
+
+```{r}
+treated.inds <- metadata$dex == "treated"
+treated <- metadata[treated.inds,]
+#treated
+treated.mean <- rowSums(counts[,treated$id])/nrow(treated)
+names(treated.mean) <- counts$ensgene
+#treated.mean
+```
+
+
+#Combine meancount for bookkeeping purposes
+```{r}
+meancounts <- data.frame(control.mean,treated.mean)
+colSums(meancounts)
+```
+
+
+#Plot mean of the treated samples against the mean of the control samples with log transformation
+```{r}
+plot(meancounts$control.mean, meancounts$treated.mean, xlab = "Control", ylab = "Treated", log = "xy")
+```
+
+# Log 2 fold change
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+# Filter genes with zero expression
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+#Filter the dataset for upregulated and downregulated (based on fold change +2/-2)
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+```
+
+#Number of genes upregulated and downregulated
+```{r}
+sum(up.ind)
+sum(down.ind)
+```
+
+Annotate the genes
+```{r}
+anno <- read.csv("data/annotables_grch38.csv")
+head(anno)
+```
+
+#Merge datasets anno and mycounts
+```{r}
+mycounts.anno <- merge(mycounts,anno,by.x = 0, by.y = "ensgene")
+View(mycounts.anno)
+```
+
+
+#Bioconductor’s annotation packages help with mapping various ID schemes to each other. Here we load the AnnotationDbi package and the annotation package org.Hs.eg.db.
+```{r}
+#biocLite("AnnotationDbi")
+#biocLite("org.Hs.eg.db")
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+```
+
+
+#List of all available key types
+```{r}
+columns(org.Hs.eg.db)
+```
+
+```{r}
+mycounts$symbol <- mapIds(org.Hs.eg.db,
+                     keys=row.names(mycounts),
+                     column="SYMBOL",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+#head(mycounts)
+mycounts$entrez <- mapIds(org.Hs.eg.db,
+                     keys=row.names(mycounts),
+                     column="ENTREZID",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+#head(mycounts)
+mycounts$uniprot <- mapIds(org.Hs.eg.db,
+                     keys=row.names(mycounts),
+                     column="UNIPROT",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+head(mycounts)
+```
+
+```{r}
+head(mycounts[up.ind,])
+head(mycounts[down.ind,])
+```
+
+#Load DESeq2 package
+```{r}
+library(DESeq2)
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+res
+```
+
+#Print a summary of our DESeq results
+```{r}
+summary(res)
+```
+
+
+#Print a summary of our DESeq results with a p-value of 0.05
+```{r}
+res05 = results(dds, alpha = 0.05)
+summary(res05)
+```
+
+#Print a summary of our DESeq results with a p-value of 0.01
+```{r}
+res01 = results(dds, alpha = 0.01)
+summary(res01)
+View(res01)
+```
+
+#Annotate results stored in object res01
+
+```{r}
+res01$symbol <- mapIds(org.Hs.eg.db,
+                     keys=row.names(res01),
+                     column="SYMBOL",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+head(res01)
+```
+
+#Save results to csv file
+```{r}
+write.csv(res01, "signif01_results.csv")
+```
+
+#Focus on thegene CRISPLD2
+```{r}
+i <- grep("CRISPLD2", res01$symbol)
+res01[i,]
+```
+
+#Use the DESeq2 package function plotCounts()
+```{r}
+plotCounts(dds,gene="ENSG00000103196", intgroup="dex")
+```
+
+```{r}
+d <- plotCounts(dds,gene="ENSG00000103196", intgroup="dex", returnData=TRUE)
+d
+```
+
+```{r}
+boxplot(count ~ dex , data=d)
+```
+
+#Volcano plots
+```{r}
+plot(res01$log2FoldChange, -log(res01$padj), xlab = "Fold Change", ylab = "p-value")
+```
+
+#Colored version of plot highlighting genes with high fold change and small p-value
+```{r}
+mycols <- rep("black", nrow(res01))
+mycols[(res01$log2FoldChange < -2) & (res01$padj < 0.01)] <- "red"
+mycols[(res01$log2FoldChange > 2) & (res01$padj < 0.01)] <- "green"
+
+plot(res01$log2FoldChange, -log(res01$padj), xlab = "Fold Change", ylab = "p-value", col = mycols)
+```
+
