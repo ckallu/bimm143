@@ -1,0 +1,204 @@
+---
+title: "Class16"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Differential Expression Analysis
+
+##Load our data files
+```{r}
+library(DESeq2)
+metaFile <- "data/GSE37704_metadata.csv"
+countFile <- "data/GSE37704_featurecounts.csv"
+
+#Import metadata and take a peak
+colData = read.csv(metaFile, row.names = 1)
+head(colData)
+
+# Import countdata
+countData = read.csv(countFile, row.names=1)
+head(countData)
+```
+
+##Note we need to remove the odd first $length col
+```{r}
+countData <- (countData[,-1])
+head(countData)
+```
+##Filter count data where you have 0 read count across all samples.
+```{r}
+countData = countData[rowSums(countData)!=0, ]
+head(countData)
+```
+
+##Running DESeq2
+```{r}
+dds = DESeqDataSetFromMatrix(countData=countData,
+                             colData=colData,
+                             design=~condition)
+dds = DESeq(dds)
+```
+
+```{r}
+dds
+resultsNames(dds)
+```
+
+##Get results for the HoxA1 knockdown versus control siRNA
+```{r}
+res = results(dds)
+```
+
+```{r}
+summary(res)
+```
+
+##Plot of the data
+```{r}
+# Make a color vector for all genes
+mycols <- rep("gray", nrow(res) )
+
+# Color red the genes with absolute fold change above 2
+mycols[ abs(res$log2FoldChange) > 2 ] <- "red"
+
+# Color blue those with adjusted p-value less than 0.01
+#  and absolute fold change more than 2
+inds <- (res$padj<0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+plot( res$log2FoldChange, -log(res$padj), col=mycols, xlab="Log2(FoldChange)", ylab="-Log(P-value)" )
+```
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+
+columns(org.Hs.eg.db)
+```
+
+##Adding gene annotation
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+
+columns(org.Hs.eg.db)
+
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    keytype="ENSEMBL",
+                    column="SYMBOL",
+                    multiVals="first")
+
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="ENTREZID",
+                    multiVals="first")
+
+res$name =   mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="GENENAME",
+                    multiVals="first")
+
+head(res, 10)
+```
+
+##Reorder these results by adjusted p-value and save them to a CSV file
+```{r}
+res = res[order(res$pvalue),]
+write.csv(res, file="deseq_results.csv")
+```
+
+##Install necessary bioconductor packages
+```{r}
+#source("http://bioconductor.org/biocLite.R")
+#biocLite( c("pathview", "gage", "gageData") )
+library(pathview)
+library(gage)
+library(gageData)
+```
+
+##Check out KEGG Pathways
+```{r}
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+# Focus on signaling and metabolic pathways only
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+
+# Examine the first 3 pathways
+head(kegg.sets.hs, 3)
+```
+
+##gage() function requires a named vector of fold changes, where the names of the values are the Entrez gene IDs
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges) 
+```
+
+##Get the results
+```{r}
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+```
+
+# Look at the first few down (less) pathways
+```{r}
+# Look at the first few down (less) pathways
+head(keggres$less)
+
+```
+
+## make a pathway plot with our RNA-Seq expression results shown in color using pathview()
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+
+![](hsa04110.pathview.png)
+
+## Focus on top 5 upregulated pathways here for demo purposes only
+```{r}
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+```
+
+##Extract the 8 character long IDs part of each string
+```{r}
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+```
+
+#Draw plots for all the top 5 pathways
+```{r}
+pathview(gene.data=foldchanges, pathway.id=keggresids, species="hsa")
+```
+
+![](hsa04640.pathview.png)
+
+![](hsa04630.pathview.png)
+
+![](hsa00140.pathview.png)
+
+![](hsa04142.pathview.png)
+
+![](hsa04330.pathview.png)
+
+
+##Gene Ontology (GO) analysis
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+```
+
