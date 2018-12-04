@@ -8,7 +8,7 @@ My class list includes:
 - class 8: [Introduction to Machine Learning for Bioinformatics 1](https://github.com/ckallu/bimm143/blob/master/class08/class08.md)
 - class 9: [Unsupervised Learning Mini-Project](https://github.com/ckallu/bimm143/blob/master/class05/class09.md)
 - class 11: [Structural Bioinformatics (Part 1)](https://github.com/ckallu/bimm143/blob/master/class11/class11.md)
-- class 13: [Genome informatics and high throughput sequencing (Part 1)](https://github.com/ckallu/bimm143/blob/master/class13/class13.md) 
+- class 13: [Genome informatics and high throughput sequencing (Part 1)](https://github.com/ckallu/bimm143/blob/master/class13/class13.md)  
 - class 14: [Transcriptomics and the analysis of RNA-Seq data](https://github.com/ckallu/bimm143/blob/master/class14/class_14.md)
 - class 15: [Genome annotation and the interpretation of gene lists ](https://github.com/ckallu/bimm143/blob/master/class15/class15.md) 
 - class 16: [Biological network analysis](https://github.com/ckallu/bimm143/blob/master/Class16/Class16.md)
