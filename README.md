@@ -1,7 +1,7 @@
 # BIMM 143 Class Repository
 My class repository for BIMM-143 (Introduction to Bioinformatics) at UCSD 
 The main class wbsite lives [here](https://bioboot.github.io/bimm143_F18/)
-My class list includes
+My class list includes:
 
 - class 5: [Data exploration and visualization in R](https://github.com/ckallu/bimm143/blob/master/class05/class05.md) 
 - class 6: [Why, when and how of writing your own R functions](https://github.com/ckallu/bimm143/blob/master/class05/class06.md) 
