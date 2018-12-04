@@ -1,5 +1,5 @@
 # BIMM 143 Class Repository
-My class repository for BIMM-143 (Introduction to Bioinformatics) at UCSD 
+My class repository for BIMM-143 (Introduction to Bioinformatics) at UCSD
 The main class wbsite lives [here](https://bioboot.github.io/bimm143_F18/)
 My class list includes:
 
