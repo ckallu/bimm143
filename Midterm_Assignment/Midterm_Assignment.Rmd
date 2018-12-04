@@ -1,0 +1,40 @@
+---
+title: "Midterm_Assignment"
+author: "Chinmay Kalluraya"
+date: "December 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Read Fasta File
+
+```{r}
+library("bio3d")
+file <- read.fasta("sample.fasta")
+file.seqidmat <- seqidentity(file)
+```
+
+#Generate heatmap
+```{r}
+heatmap(file.seqidmat, margins = c(12,8))
+```
+
+#Generate Consensus sequence and run blast to find the most similar atomic resolution structures to your aligned sequences 
+```{r}
+file.consensus <- consensus(file)
+pdb_blast <- blast.pdb(file.consensus$seq)
+pdb_annotate <- pdb.annotate(pdb_blast$hit.tbl$pdb.id)
+```
+
+#Merge columns from pdb_blast and pdb_annotate and find top 3 unique hits
+```{r}
+library(knitr)
+pdb_data <- merge(pdb_annotate, pdb_blast$hit.tbl, by.y = "pdb.id", by.x = 0)
+pdb_data.eval <- pdb_data[order(pdb_data$evalue),]
+unique_hits <- pdb_data.eval[1:3, c("structureId", "experimentalTechnique", "resolution", "source", "evalue", "identity")]
+colnames(unique_hits) <- c("ID", "Technique", "Resolution", "Source", "Evalue", "Identity")
+kable(unique_hits, row.names = FALSE, digits = 130)
+```
